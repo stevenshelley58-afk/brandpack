@@ -180,7 +180,19 @@ export class AnthropicAdapter implements LLMAdapter {
       ],
       system: spec.system_prompt
     };
-    
+
+    if (spec.response_format === 'json') {
+      (params as any).response_format = { type: 'json' };
+    } else if (spec.response_format === 'structured' && spec.schema) {
+      (params as any).response_format = {
+        type: 'json_schema',
+        json_schema: {
+          name: spec.task_id,
+          schema: spec.schema
+        }
+      };
+    }
+
     // Add optional parameters
     if (spec.constraints.temperature !== undefined) {
       params.temperature = spec.constraints.temperature;
@@ -204,38 +216,76 @@ export class AnthropicAdapter implements LLMAdapter {
     response: Anthropic.Message,
     format: 'text' | 'json' | 'structured'
   ): string[] {
-    // Get text content
-    const textContent = response.content
+    const contentBlocks = Array.isArray(response.content) ? response.content : [];
+    const textBlocks = contentBlocks
       .filter(block => block.type === 'text')
-      .map(block => (block as Anthropic.TextBlock).text)
-      .join('\n');
-    
+      .map(block => (block as Anthropic.TextBlock).text);
+
+    const aggregatedText = ((response as any).output_text as string | undefined) ?? textBlocks.join('\n');
+
     if (format === 'text') {
-      return [textContent];
+      return [aggregatedText];
     }
-    
+
     if (format === 'json' || format === 'structured') {
-      // Try to parse as JSON
-      try {
-        // Sometimes models wrap JSON in markdown code blocks
-        const cleaned = textContent
-          .replace(/```json\n?/g, '')
-          .replace(/```\n?/g, '')
-          .trim();
-        
-        JSON.parse(cleaned); // Validate it's valid JSON
-        return [cleaned];
-      } catch (error) {
-        throw new AdapterError(
-          'Response is not valid JSON',
-          'anthropic',
-          AdapterErrorCode.INVALID_REQUEST,
-          { response: textContent }
+      const candidatePayloads: string[] = [];
+
+      const responseJson = (response as any).output_json;
+      if (responseJson !== undefined && responseJson !== null) {
+        candidatePayloads.push(
+          typeof responseJson === 'string' ? responseJson : JSON.stringify(responseJson)
         );
       }
+
+      const toolBlocks = contentBlocks.filter(
+        block => block.type === 'tool_use'
+      ) as Anthropic.ToolUseBlock[];
+
+      for (const tool of toolBlocks) {
+        const payload = (tool as any).input ?? (tool as any).output_json ?? null;
+        if (payload !== null && payload !== undefined) {
+          candidatePayloads.push(
+            typeof payload === 'string' ? payload : JSON.stringify(payload)
+          );
+        }
+      }
+
+      if (aggregatedText) {
+        candidatePayloads.push(aggregatedText);
+      }
+
+      const validOutputs: string[] = [];
+
+      for (const candidate of candidatePayloads) {
+        const cleaned = this.cleanJsonPayload(candidate);
+        try {
+          JSON.parse(cleaned);
+          validOutputs.push(cleaned);
+        } catch {
+          continue;
+        }
+      }
+
+      if (validOutputs.length > 0) {
+        return validOutputs;
+      }
+
+      throw new AdapterError(
+        'Response is not valid JSON',
+        'anthropic',
+        AdapterErrorCode.INVALID_REQUEST,
+        { response: aggregatedText }
+      );
     }
-    
-    return [textContent];
+
+    return [aggregatedText];
+  }
+
+  private cleanJsonPayload(payload: string): string {
+    return payload
+      .replace(/```json\s*/gi, '')
+      .replace(/```/g, '')
+      .trim();
   }
   
   /**
