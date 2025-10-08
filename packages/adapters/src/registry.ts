@@ -1,155 +1,69 @@
-/**
- * Adapter Registry
- * 
- * Central registry for all LLM and image adapters.
- * Allows runtime registration and lookup of adapters by provider name.
- */
+import type {
+  LLMAdapter,
+  ImageAdapter,
+} from '@brandpack/core';
 
-import type { LLMAdapter, ImageAdapter } from '@brandpack/core';
+type AdapterMap<T> = Map<string, T>;
 
-/**
- * Global registry for LLM adapters
- */
-class LLMAdapterRegistry {
-  private adapters: Map<string, LLMAdapter> = new Map();
-  
-  /**
-   * Register an LLM adapter
-   */
-  register(adapter: LLMAdapter): void {
-    if (this.adapters.has(adapter.provider)) {
-      console.warn(`Adapter for provider "${adapter.provider}" already registered, overwriting`);
-    }
-    this.adapters.set(adapter.provider, adapter);
-  }
-  
-  /**
-   * Get an adapter by provider name
-   */
-  get(provider: string): LLMAdapter | undefined {
-    return this.adapters.get(provider);
-  }
-  
-  /**
-   * Check if a provider is registered
-   */
-  has(provider: string): boolean {
-    return this.adapters.has(provider);
-  }
-  
-  /**
-   * Get all registered provider names
-   */
-  getProviders(): string[] {
-    return Array.from(this.adapters.keys());
-  }
-  
-  /**
-   * Unregister an adapter
-   */
-  unregister(provider: string): boolean {
-    return this.adapters.delete(provider);
-  }
-  
-  /**
-   * Clear all adapters
-   */
-  clear(): void {
-    this.adapters.clear();
+function assertUnique<T extends { provider: string }>(
+  registry: AdapterMap<T>,
+  adapter: T,
+) {
+  const existing = registry.get(adapter.provider);
+  if (existing && existing !== adapter) {
+    throw new Error(
+      `Adapter for provider "${adapter.provider}" is already registered.`,
+    );
   }
 }
 
-/**
- * Global registry for image adapters
- */
-class ImageAdapterRegistry {
-  private adapters: Map<string, ImageAdapter> = new Map();
-  
-  /**
-   * Register an image adapter
-   */
-  register(adapter: ImageAdapter): void {
-    if (this.adapters.has(adapter.provider)) {
-      console.warn(`Image adapter for provider "${adapter.provider}" already registered, overwriting`);
-    }
-    this.adapters.set(adapter.provider, adapter);
-  }
-  
-  /**
-   * Get an adapter by provider name
-   */
-  get(provider: string): ImageAdapter | undefined {
-    return this.adapters.get(provider);
-  }
-  
-  /**
-   * Check if a provider is registered
-   */
-  has(provider: string): boolean {
-    return this.adapters.has(provider);
-  }
-  
-  /**
-   * Get all registered provider names
-   */
-  getProviders(): string[] {
-    return Array.from(this.adapters.keys());
-  }
-  
-  /**
-   * Unregister an adapter
-   */
-  unregister(provider: string): boolean {
-    return this.adapters.delete(provider);
-  }
-  
-  /**
-   * Clear all adapters
-   */
-  clear(): void {
-    this.adapters.clear();
-  }
+function register<T extends { provider: string }>(
+  registry: AdapterMap<T>,
+  adapter: T,
+) {
+  assertUnique(registry, adapter);
+  registry.set(adapter.provider, adapter);
 }
 
-// Singleton instances
-export const llmRegistry = new LLMAdapterRegistry();
-export const imageRegistry = new ImageAdapterRegistry();
+function get<T>(registry: AdapterMap<T>, provider: string) {
+  return registry.get(provider);
+}
 
-/**
- * Convenience function to register both LLM and image adapters
- */
-export function registerAdapters(config: {
+function list(registry: AdapterMap<unknown>): string[] {
+  return Array.from(registry.keys()).sort();
+}
+
+const llmAdapters: AdapterMap<LLMAdapter> = new Map();
+const imageAdapters: AdapterMap<ImageAdapter> = new Map();
+
+export const llmRegistry = {
+  register: (adapter: LLMAdapter) => register(llmAdapters, adapter),
+  get: (provider: string) => get(llmAdapters, provider),
+  list: () => list(llmAdapters),
+  clear: () => llmAdapters.clear(),
+};
+
+export const imageRegistry = {
+  register: (adapter: ImageAdapter) => register(imageAdapters, adapter),
+  get: (provider: string) => get(imageAdapters, provider),
+  list: () => list(imageAdapters),
+  clear: () => imageAdapters.clear(),
+};
+
+export function registerAdapters({
+  llm = [],
+  image = [],
+}: {
   llm?: LLMAdapter[];
   image?: ImageAdapter[];
-}): void {
-  if (config.llm) {
-    for (const adapter of config.llm) {
-      llmRegistry.register(adapter);
-    }
-  }
-  
-  if (config.image) {
-    for (const adapter of config.image) {
-      imageRegistry.register(adapter);
-    }
-  }
+}) {
+  llm.forEach((adapter) => llmRegistry.register(adapter));
+  image.forEach((adapter) => imageRegistry.register(adapter));
 }
 
-/**
- * Get adapter counts
- */
-export function getAdapterStats(): {
-  llm: number;
-  image: number;
-  total: number;
-} {
-  const llmCount = llmRegistry.getProviders().length;
-  const imageCount = imageRegistry.getProviders().length;
-  
+export function getAdapterStats() {
   return {
-    llm: llmCount,
-    image: imageCount,
-    total: llmCount + imageCount
+    llm: llmRegistry.list(),
+    image: imageRegistry.list(),
   };
 }
-
