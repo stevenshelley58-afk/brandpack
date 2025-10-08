@@ -14,9 +14,9 @@ export type {
   AdapterResponse,
   TokenUsage,
   ImageAdapter,
-  ImageBrief,
+  ImageBrief as AdapterImageBrief,
   ImageConfig,
-  ImageResult,
+  ImageResult as AdapterImageResult,
   ProviderPricing
 } from './adapter';
 export { AdapterError, AdapterErrorCode, calculateCost } from './adapter';
