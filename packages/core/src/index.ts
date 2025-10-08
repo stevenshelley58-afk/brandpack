@@ -10,8 +10,10 @@ export * from './types';
 // Config utilities
 export {
   getEffectiveConfig,
+  resolveEffectiveConfig,
   type EffectiveConfigOptions,
   type EffectiveConfigResult,
+  type EffectiveConfigResolveOptions,
 } from './config';
 // export * from './scraper';
 // export * from './kernel';

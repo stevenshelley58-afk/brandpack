@@ -7,11 +7,11 @@ import {
 } from '../merger.js';
 import {
   resolveEffectiveConfig,
-} from '../effective.js';
+} from '../effective-core.js';
 import type {
   BrandPackConfig,
   PartialConfig,
-} from '../validator';
+} from '../validator.js';
 
 test('mergeConfigLayers respects precedence, deep merge, array replace, null ignored', () => {
   const fallback = clone(DEFAULT_FALLBACK_CONFIG);

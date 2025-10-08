@@ -12,9 +12,12 @@ export {
   type MergeLayers,
 } from './merger.js';
 export {
-  getEffectiveConfig,
   resolveEffectiveConfig,
+  type EffectiveConfigResolveOptions,
+  type EffectiveConfigResult,
+} from './effective-core.js';
+export {
+  getEffectiveConfig,
   ConfigValidationError,
   type EffectiveConfigOptions,
-  type EffectiveConfigResult,
 } from './effective.js';
