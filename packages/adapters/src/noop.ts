@@ -10,9 +10,9 @@ import type {
   LLMSpec,
   AdapterResponse,
   ImageAdapter,
-  ImageBrief,
+  AdapterImageBrief,
   ImageConfig,
-  ImageResult
+  AdapterImageResult
 } from '@brandpack/core';
 
 /**
@@ -188,7 +188,10 @@ export class NoopImageAdapter implements ImageAdapter {
   /**
    * Generate mock image
    */
-  async generate(brief: ImageBrief, config: ImageConfig): Promise<ImageResult> {
+  async generate(
+    brief: AdapterImageBrief,
+    config: ImageConfig
+  ): Promise<AdapterImageResult> {
     const startTime = Date.now();
     
     // Simulate generation delay

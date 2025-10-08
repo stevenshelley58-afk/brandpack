@@ -8,9 +8,9 @@
 import type {
   LLMSpec,
   AdapterResponse,
-  ImageBrief,
+  AdapterImageBrief,
   ImageConfig,
-  ImageResult
+  AdapterImageResult
 } from '@brandpack/core';
 import { AdapterError, AdapterErrorCode } from '@brandpack/core';
 import { llmRegistry, imageRegistry } from './registry';
@@ -143,10 +143,10 @@ export async function routeSpecBatch(
  * Route an image generation request
  */
 export async function routeImageGeneration(
-  brief: ImageBrief,
+  brief: AdapterImageBrief,
   config: ImageConfig,
   options: RouteOptions = {}
-): Promise<ImageResult> {
+): Promise<AdapterImageResult> {
   const targetProvider = options.provider || config.provider;
   
   // Get adapter from registry
@@ -213,10 +213,10 @@ export async function routeImageGeneration(
  * Route multiple image generations in parallel
  */
 export async function routeImageBatch(
-  briefs: ImageBrief[],
+  briefs: AdapterImageBrief[],
   config: ImageConfig,
   options: RouteOptions = {}
-): Promise<ImageResult[]> {
+): Promise<AdapterImageResult[]> {
   return Promise.all(
     briefs.map(brief => routeImageGeneration(brief, config, options))
   );
