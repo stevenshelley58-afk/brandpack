@@ -1,0 +1,586 @@
+{
+  "$schema": "./prompts.schema.json",
+  "version": "1.0.0",
+  "updated_at": "2025-01-10T00:00:00Z",
+  
+  "global": {
+    "provider": "anthropic",
+    "log_level": "info",
+    "cache_enabled": true,
+    "cache_ttl": {
+      "scrape": 604800,
+      "llm": 86400,
+      "image": -1
+    },
+    "redact_patterns": [
+      "\\b\\d{4}[- ]?\\d{4}[- ]?\\d{4}[- ]?\\d{4}\\b",
+      "\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}\\b",
+      "\\b\\d{3}[-.]?\\d{3}[-.]?\\d{4}\\b"
+    ],
+    "rate_limit": {
+      "enabled": true,
+      "requests_per_minute": 100
+    }
+  },
+  
+  "calls": {
+    "scrape_review": {
+      "prompt": {
+        "system": "You are an expert brand analyst. Your job is to analyze website content and extract the brand's voice, tone, messaging, and key proof points. Be specific and factual. Extract actual quotes and data points when available. Avoid generic observations.",
+        "user_template": "Analyze this brand:\n\nDomain: {domain}\n\nContent:\n{kernel}\n\nProvide a structured brand snapshot with:\n1. Tone (3-5 specific adjectives based on actual language used)\n2. Voice (how they speak: formal/casual, technical/simple, etc.)\n3. Style (messaging patterns: benefit-driven, proof-heavy, emotional, etc.)\n4. Proof points (actual numbers, certifications, customer counts, metrics)\n5. Pricing cues (if available: tiers, starting prices, positioning)\n6. Target audience (be specific: job titles, company sizes, industries)\n7. Competitors (mentioned or implied)\n8. Unique angle (their key differentiator in their own words)\n9. Messaging themes (common topics, pain points addressed)\n\nBe factual. Use direct quotes when relevant. If something isn't clear from the content, say \"Not found in content\" instead of guessing.",
+        "variables": ["domain", "kernel"]
+      },
+      "model": {
+        "provider": "anthropic",
+        "name": "claude-3-5-sonnet-20241022",
+        "temperature": 0.3,
+        "max_tokens": 4000
+      },
+      "validation": {
+        "response_format": "json",
+        "schema": {
+          "type": "object",
+          "required": ["tone", "voice", "style", "proof_points", "target_audience"],
+          "properties": {
+            "tone": { "type": "array", "items": { "type": "string" }, "minItems": 3, "maxItems": 5 },
+            "voice": { "type": "array", "items": { "type": "string" } },
+            "style": { "type": "array", "items": { "type": "string" } },
+            "proof_points": {
+              "type": "object",
+              "properties": {
+                "customers": { "type": "array", "items": { "type": "string" } },
+                "metrics": { "type": "array", "items": { "type": "string" } },
+                "certifications": { "type": "array", "items": { "type": "string" } }
+              }
+            },
+            "pricing_cues": {
+              "type": "object",
+              "properties": {
+                "tiers": { "type": "array", "items": { "type": "string" } },
+                "positioning": { "type": "string" }
+              }
+            },
+            "target_audience": { "type": "string" },
+            "competitors": { "type": "array", "items": { "type": "string" } },
+            "unique_angle": { "type": "string" },
+            "messaging_themes": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "min_length": 500,
+        "required_fields": ["tone", "voice", "proof_points", "target_audience"]
+      },
+      "budgets": {
+        "max_tokens_per_call": 6000,
+        "max_cost_per_call": 0.50,
+        "timeout_ms": 120000,
+        "max_retries": 2
+      },
+      "logging": {
+        "level": "info",
+        "include_prompts": false,
+        "include_outputs": true,
+        "redact": false
+      }
+    },
+    
+    "audience_analysis": {
+      "prompt": {
+        "system": "You are an audience segmentation expert. Analyze brand snapshots to identify specific, actionable audience segments. Be precise about demographics, psychographics, pain points, and how to message to each segment.",
+        "user_template": "Based on this brand snapshot:\n\n{snapshot}\n\nIdentify {n_segments} distinct audience segments. For each:\n1. Name (specific role/persona)\n2. Description (demographics, company context)\n3. Pain points (specific challenges they face)\n4. Messaging angle (how to speak to them effectively)\n5. Priority (1-5, based on fit with brand)\n\nBe specific. Avoid generic segments like 'small businesses' - instead say 'small e-commerce store owners, 1-10 employees, overwhelmed by inventory management'.",
+        "variables": ["snapshot", "n_segments"]
+      },
+      "model": {
+        "provider": "anthropic",
+        "name": "claude-3-5-sonnet-20241022",
+        "temperature": 0.4,
+        "max_tokens": 3000
+      },
+      "validation": {
+        "response_format": "json",
+        "schema": {
+          "type": "object",
+          "required": ["segments"],
+          "properties": {
+            "segments": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["name", "description", "pain_points", "messaging_angle", "priority"],
+                "properties": {
+                  "id": { "type": "string" },
+                  "name": { "type": "string" },
+                  "description": { "type": "string" },
+                  "pain_points": { "type": "array", "items": { "type": "string" } },
+                  "messaging_angle": { "type": "string" },
+                  "priority": { "type": "number", "minimum": 1, "maximum": 5 }
+                }
+              }
+            }
+          }
+        }
+      },
+      "budgets": {
+        "max_tokens_per_call": 5000,
+        "max_cost_per_call": 0.30,
+        "timeout_ms": 90000,
+        "max_retries": 2
+      },
+      "logging": {
+        "level": "info",
+        "include_prompts": false,
+        "include_outputs": true,
+        "redact": false
+      },
+      "advanced": {
+        "n_segments": 5
+      }
+    },
+    
+    "ideas_generate": {
+      "prompt": {
+        "system": "You are a creative marketing strategist. Generate diverse, specific ad campaign ideas that feel authentic to the brand. Each idea should target a different pain point or emotional angle. Be specific and varied. Use the brand's actual proof points.\n\nRULES:\n- Generate {n_outputs} COMPLETELY DIFFERENT ideas\n- No two ideas should target the same pain point\n- Mix emotional angles: fear, aspiration, urgency, social proof, humor, logic\n- Vary format: question, statement, challenge, story\n- Use brand's actual proof points (don't make up facts)\n- Be specific, not generic\n- Avoid AI slop phrases: game-changer, revolutionize, unlock, leverage, seamless, next level",
+        "user_template": "Brand: {domain}\n\nSnapshot:\n{snapshot}\n\nAudience Segments:\n{segments}\n\nGenerate {n_outputs} completely different marketing campaign ideas. For each:\n1. Angle (what pain point or emotion you're targeting)\n2. Hook (the actual ad hook - make it punchy)\n3. Target emotion (urgency, fear, aspiration, etc.)\n4. Target segment (which audience this speaks to)\n5. Proof point (which brand fact to highlight)\n6. Format (question, statement, challenge, story)\n\nMake each idea distinct. High variance is critical.",
+        "variables": ["domain", "snapshot", "segments", "n_outputs"]
+      },
+      "model": {
+        "provider": "anthropic",
+        "name": "claude-3-5-sonnet-20241022",
+        "temperature": 0.9,
+        "top_p": 0.95,
+        "max_tokens": 4000
+      },
+      "validation": {
+        "response_format": "json",
+        "schema": {
+          "type": "object",
+          "required": ["ideas"],
+          "properties": {
+            "ideas": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["angle", "hook", "target_emotion", "proof_point", "format"],
+                "properties": {
+                  "id": { "type": "string" },
+                  "angle": { "type": "string" },
+                  "hook": { "type": "string" },
+                  "target_emotion": { "type": "string" },
+                  "target_segment": { "type": "string" },
+                  "proof_point": { "type": "string" },
+                  "format": { "type": "string", "enum": ["question", "statement", "challenge", "story"] }
+                }
+              }
+            }
+          }
+        },
+        "min_length": 1000,
+        "banned_phrases": [
+          "game-changer",
+          "revolutionize",
+          "unlock the power",
+          "unlock your",
+          "leverage",
+          "seamless",
+          "synergy",
+          "cutting-edge",
+          "take your X to the next level",
+          "boost your Y",
+          "in today's fast-paced world",
+          "empower",
+          "transform your business",
+          "next generation"
+        ]
+      },
+      "budgets": {
+        "max_tokens_per_call": 6000,
+        "max_cost_per_call": 0.50,
+        "timeout_ms": 120000,
+        "max_retries": 2
+      },
+      "logging": {
+        "level": "info",
+        "include_prompts": false,
+        "include_outputs": true,
+        "redact": false
+      },
+      "advanced": {
+        "n_outputs": 20,
+        "n_displayed": 6,
+        "dedupe_threshold": 0.7,
+        "regen_strategy": "fresh"
+      }
+    },
+    
+    "copy_generate": {
+      "prompt": {
+        "system": "You are an expert ad copywriter. Write specific, compelling ad copy that matches the brand's voice and uses their actual proof points. Follow length constraints exactly. The copy must work in a two-part format: 'before' (collapsed view) and 'after' (expanded view).\n\nRULES:\n- Use the brand's actual voice and tone\n- Include specific proof points from the brand snapshot\n- Before: Short, punchy, hook them\n- After: Expand with details, proof, call-to-action\n- Stay within character limits\n- No generic marketing speak\n- Be authentic to the brand",
+        "user_template": "Brand: {domain}\n\nSnapshot:\n{snapshot}\n\nIdea:\n{idea}\n\nGenerate {variants_per_idea} copy variants for this idea. Each variant needs:\n\n1. BEFORE (collapsed view):\n   - Headline (max {headline_max_before} chars)\n   - Description (max {description_max_before} chars)\n   - Must be punchy and hook the reader\n\n2. AFTER (expanded view):\n   - Headline (same as before, max {headline_max_after} chars)\n   - Description (max {description_max_after} chars)\n   - Include proof points, details, CTA\n\nLength constraints are HARD LIMITS. Stay under them.\n\nWrite in the brand's voice: {tone}. Use these proof points: {proof_points}.",
+        "variables": [
+          "domain",
+          "snapshot",
+          "idea",
+          "variants_per_idea",
+          "headline_max_before",
+          "description_max_before",
+          "headline_max_after",
+          "description_max_after",
+          "tone",
+          "proof_points"
+        ]
+      },
+      "model": {
+        "provider": "anthropic",
+        "name": "claude-3-5-sonnet-20241022",
+        "temperature": 0.7,
+        "max_tokens": 3000
+      },
+      "validation": {
+        "response_format": "json",
+        "schema": {
+          "type": "object",
+          "required": ["variants"],
+          "properties": {
+            "variants": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["id", "before", "after"],
+                "properties": {
+                  "id": { "type": "string" },
+                  "before": {
+                    "type": "object",
+                    "required": ["headline", "description"],
+                    "properties": {
+                      "headline": { "type": "string" },
+                      "description": { "type": "string" }
+                    }
+                  },
+                  "after": {
+                    "type": "object",
+                    "required": ["headline", "description"],
+                    "properties": {
+                      "headline": { "type": "string" },
+                      "description": { "type": "string" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "banned_phrases": [
+          "game-changer",
+          "revolutionize",
+          "unlock",
+          "leverage",
+          "seamless",
+          "cutting-edge"
+        ]
+      },
+      "budgets": {
+        "max_tokens_per_call": 5000,
+        "max_cost_per_call": 0.40,
+        "timeout_ms": 120000,
+        "max_retries": 2
+      },
+      "logging": {
+        "level": "info",
+        "include_prompts": false,
+        "include_outputs": true,
+        "redact": false
+      },
+      "advanced": {
+        "variants_per_idea": 3,
+        "headline_max_before": 40,
+        "description_max_before": 90,
+        "headline_max_after": 40,
+        "description_max_after": 300
+      }
+    },
+    
+    "image_brief": {
+      "prompt": {
+        "system": "You are an art director creating image briefs for ad campaigns. Generate detailed, specific prompts that will produce high-quality 4:5 ad images. Vary styles to avoid repetition. Match the mood to the copy's emotion.",
+        "user_template": "Brand: {domain}\n\nCopy:\nHeadline: {headline}\nDescription: {description}\nEmotion: {emotion}\n\nGenerate {briefs_per_copy} image briefs with different styles. For each:\n\n1. Prompt (detailed image description)\n   - Be specific about composition, lighting, mood, style\n   - Mention 4:5 aspect ratio suitable for ads\n   - Match the {emotion} from the copy\n   \n2. Negative prompt (what to avoid)\n   - Common issues: cluttered, low quality, stock photo clichés\n   \n3. Style category:\n   - product_photography: Clean product shot\n   - lifestyle: People using product, aspirational\n   - abstract: Conceptual, shapes, colors\n   - illustration: Drawn/designed aesthetic\n   - data_viz: Charts, graphs, technical\n   \n4. Mood (matches copy emotion)\n5. Composition (centered, rule-of-thirds, etc.)\n\nVary styles across briefs. Don't generate 3 identical product photos.",
+        "variables": ["domain", "headline", "description", "emotion", "briefs_per_copy"]
+      },
+      "model": {
+        "provider": "anthropic",
+        "name": "claude-3-5-sonnet-20241022",
+        "temperature": 0.8,
+        "max_tokens": 2000
+      },
+      "validation": {
+        "response_format": "json",
+        "schema": {
+          "type": "object",
+          "required": ["briefs"],
+          "properties": {
+            "briefs": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["id", "prompt", "negative_prompt", "style", "mood", "composition"],
+                "properties": {
+                  "id": { "type": "string" },
+                  "prompt": { "type": "string" },
+                  "negative_prompt": { "type": "string" },
+                  "style": {
+                    "type": "string",
+                    "enum": ["product_photography", "lifestyle", "abstract", "illustration", "data_viz"]
+                  },
+                  "mood": { "type": "string" },
+                  "composition": { "type": "string" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "budgets": {
+        "max_tokens_per_call": 3000,
+        "max_cost_per_call": 0.30,
+        "timeout_ms": 90000,
+        "max_retries": 2
+      },
+      "logging": {
+        "level": "info",
+        "include_prompts": false,
+        "include_outputs": true,
+        "redact": false
+      },
+      "advanced": {
+        "briefs_per_copy": 2
+      }
+    },
+    
+    "image_render": {
+      "model": {
+        "provider": "openai",
+        "name": "dall-e-3"
+      },
+      "image": {
+        "resolution": "1024x1280",
+        "aspect_ratio": "4:5",
+        "format": "png",
+        "quality": 90,
+        "n_variations": 1,
+        "style_modifiers": [
+          "high quality",
+          "professional",
+          "clean composition",
+          "well-lit"
+        ],
+        "negative_modifiers": [
+          "cluttered",
+          "low quality",
+          "blurry",
+          "stock photo smile",
+          "generic",
+          "text overlay",
+          "watermark"
+        ]
+      },
+      "budgets": {
+        "max_cost_per_call": 0.15,
+        "timeout_ms": 180000,
+        "max_retries": 1
+      },
+      "logging": {
+        "level": "info",
+        "include_prompts": true,
+        "include_outputs": false,
+        "redact": false
+      }
+    }
+  },
+  
+  "scraper": {
+    "max_pages": 20,
+    "max_bytes_per_page": 524288,
+    "timeout_ms": 10000,
+    "concurrency": 3,
+    "respect_robots_txt": true,
+    "follow_redirects": true,
+    "max_redirects": 3,
+    "priority_pages": ["/", "/about", "/products", "/pricing", "/contact", "/features"],
+    "selectors": {
+      "product_name": [".product-title", "h1", "[itemprop='name']", ".product-name"],
+      "price": [".price", "[itemprop='price']", ".product-price", ".pricing"],
+      "description": [".description", "[itemprop='description']", "meta[name='description']", ".product-description"],
+      "testimonial": [".testimonial", ".review", "[itemprop='review']", ".customer-review"]
+    },
+    "kernel": {
+      "max_kb": 2,
+      "compression_strategy": "balanced"
+    },
+    "allow_manual_input": true,
+    "allow_csv_import": false
+  },
+  
+  "validation": {
+    "banned_phrases": [
+      "game-changer",
+      "revolutionize",
+      "unlock the power",
+      "unlock your",
+      "leverage",
+      "seamless",
+      "synergy",
+      "cutting-edge",
+      "take your X to the next level",
+      "boost your Y",
+      "in today's fast-paced world",
+      "empower your",
+      "transform your business",
+      "next generation",
+      "paradigm shift",
+      "disruptive innovation"
+    ],
+    "copy": {
+      "before": {
+        "headline_max": 40,
+        "description_max": 90
+      },
+      "after": {
+        "headline_max": 40,
+        "description_max": 300
+      }
+    },
+    "dedupe": {
+      "enabled": true,
+      "threshold": 0.7,
+      "method": "embeddings"
+    },
+    "proof_validation": {
+      "enabled": true,
+      "require_citation": true
+    }
+  },
+  
+  "budgets": {
+    "max_cost_per_run": 5.0,
+    "max_tokens_per_run": 50000,
+    "max_duration_per_run_ms": 300000,
+    "alert_threshold": 50.0,
+    "provider_quotas": {
+      "anthropic": {
+        "requests_per_minute": 50,
+        "tokens_per_minute": 100000,
+        "daily_spend_limit": 100.0
+      },
+      "openai": {
+        "requests_per_minute": 100,
+        "tokens_per_minute": 150000,
+        "daily_spend_limit": 100.0
+      }
+    }
+  },
+  
+  "presets": {
+    "fast": {
+      "description": "Cheaper models, lower quality, <2 min total",
+      "config": {
+        "calls": {
+          "scrape_review": {
+            "model": {
+              "provider": "anthropic",
+              "name": "claude-3-haiku-20240307",
+              "temperature": 0.3
+            }
+          },
+          "ideas_generate": {
+            "model": {
+              "provider": "openai",
+              "name": "gpt-4o-mini",
+              "temperature": 0.8
+            },
+            "advanced": {
+              "n_outputs": 10,
+              "n_displayed": 5
+            }
+          },
+          "copy_generate": {
+            "model": {
+              "provider": "openai",
+              "name": "gpt-4o-mini"
+            }
+          }
+        },
+        "budgets": {
+          "max_cost_per_run": 1.0
+        }
+      }
+    },
+    
+    "balanced": {
+      "description": "Good quality/speed tradeoff, default choice",
+      "config": {
+        "calls": {
+          "scrape_review": {
+            "model": {
+              "provider": "anthropic",
+              "name": "claude-3-5-sonnet-20241022"
+            }
+          },
+          "ideas_generate": {
+            "model": {
+              "provider": "anthropic",
+              "name": "claude-3-5-sonnet-20241022",
+              "temperature": 0.9
+            },
+            "advanced": {
+              "n_outputs": 20,
+              "n_displayed": 6
+            }
+          }
+        },
+        "budgets": {
+          "max_cost_per_run": 3.0
+        }
+      }
+    },
+    
+    "full": {
+      "description": "Best models, highest quality, ~5 min total",
+      "config": {
+        "calls": {
+          "scrape_review": {
+            "model": {
+              "provider": "anthropic",
+              "name": "claude-3-5-sonnet-20241022",
+              "temperature": 0.3,
+              "max_tokens": 8000
+            }
+          },
+          "ideas_generate": {
+            "model": {
+              "provider": "anthropic",
+              "name": "claude-3-5-sonnet-20241022",
+              "temperature": 0.95
+            },
+            "advanced": {
+              "n_outputs": 30,
+              "n_displayed": 8
+            }
+          },
+          "copy_generate": {
+            "model": {
+              "provider": "anthropic",
+              "name": "claude-3-5-sonnet-20241022"
+            }
+          },
+          "image_render": {
+            "image": {
+              "quality": 95
+            }
+          }
+        },
+        "budgets": {
+          "max_cost_per_run": 10.0
+        }
+      }
+    }
+  }
+}
+
