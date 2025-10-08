@@ -16,7 +16,8 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "test": "npm run build && node --test dist/config/__tests__/**/*.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0"

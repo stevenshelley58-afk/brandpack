@@ -7,8 +7,12 @@
 // Export all types
 export * from './types';
 
-// Future exports (will be added as we build)
-// export * from './config';
+// Config utilities
+export {
+  getEffectiveConfig,
+  type EffectiveConfigOptions,
+  type EffectiveConfigResult,
+} from './config';
 // export * from './scraper';
 // export * from './kernel';
 // export * from './runner';
