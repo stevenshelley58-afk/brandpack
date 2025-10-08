@@ -1,11 +1,11 @@
+import type { LLMAdapter } from '@brandpack/core';
 import { llmRegistry, imageRegistry, registerAdapters } from './registry.js';
 import { routeSpec, routeImageGeneration } from './router.js';
 import { NoopLLMAdapter, NoopImageAdapter } from './noop.js';
 import { AnthropicLLMAdapter } from './anthropic.js';
+import { OpenAILLMAdapter } from './openai.js';
 
-const builtinLLM: Array<NoopLLMAdapter | AnthropicLLMAdapter> = [
-  new NoopLLMAdapter(),
-];
+const builtinLLM: LLMAdapter[] = [new NoopLLMAdapter()];
 
 if (process.env.ANTHROPIC_API_KEY) {
   try {
@@ -14,6 +14,18 @@ if (process.env.ANTHROPIC_API_KEY) {
     // eslint-disable-next-line no-console
     console.warn(
       '[adapters] Failed to initialize Anthropic adapter:',
+      (error as Error).message,
+    );
+  }
+}
+
+if (process.env.OPENAI_API_KEY) {
+  try {
+    builtinLLM.push(new OpenAILLMAdapter());
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.warn(
+      '[adapters] Failed to initialize OpenAI adapter:',
       (error as Error).message,
     );
   }
@@ -35,4 +47,5 @@ export {
   NoopLLMAdapter,
   NoopImageAdapter,
   AnthropicLLMAdapter,
+  OpenAILLMAdapter,
 };
