@@ -63,3 +63,12 @@ export async function loadPromptsConfig(
 
   return parsed;
 }
+
+/**
+ * Clear the in-memory config cache
+ * Call this after updating prompts.json to force reload on next access
+ */
+export function clearConfigCache(): void {
+  cachedPath = null;
+  cachedPayload = null;
+}

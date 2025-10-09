@@ -4,8 +4,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { promises as fs } from 'node:fs';
+import { promises as fs, accessSync } from 'node:fs';
 import path from 'node:path';
+import { clearConfigCache } from '@brandpack/core/config';
 
 // Find workspace root
 function findWorkspaceRoot(): string {
@@ -15,7 +16,7 @@ function findWorkspaceRoot(): string {
   for (let i = 0; i < maxLevelsUp; i++) {
     const configPath = path.join(current, 'data', 'config', 'prompts.json');
     try {
-      require('fs').accessSync(configPath);
+      accessSync(configPath);
       return current;
     } catch {
       const parent = path.dirname(current);
@@ -65,6 +66,10 @@ export async function POST(request: NextRequest) {
       JSON.stringify(body, null, 2),
       'utf-8'
     );
+
+    // Clear the config cache so next API call loads the new config
+    clearConfigCache();
+    console.log('[/api/config POST] Config saved and cache cleared');
 
     return NextResponse.json({ success: true });
   } catch (error) {

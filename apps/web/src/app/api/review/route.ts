@@ -50,6 +50,10 @@ export async function POST(request: NextRequest) {
     // Load config
     const config = await loadPromptsConfig();
 
+    // Debug logging
+    console.log('[/api/review] OPENAI_API_KEY present?', !!process.env.OPENAI_API_KEY);
+    console.log('[/api/review] Config provider:', config.calls['scrape.review_summarize']?.model?.provider);
+
     // Build spec
     const spec = buildScrapeReviewSpec(
       config,

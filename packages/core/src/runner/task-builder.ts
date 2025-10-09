@@ -15,7 +15,7 @@ import type { KernelPayload } from '../kernel/compressor.js';
  */
 export function buildScrapeReviewSpec(
   config: PromptsConfig,
-  domain: string,
+  kernel: KernelPayload,
   runId?: string
 ): LLMSpec {
   const call = config.calls['scrape.review_summarize'];
@@ -23,7 +23,8 @@ export function buildScrapeReviewSpec(
     throw new Error('scrape.review_summarize not found in config');
   }
 
-  const userPrompt = call.prompt.user_template.replace('{domain}', domain);
+  const kernelJson = JSON.stringify(kernel, null, 2);
+  const userPrompt = call.prompt.user_template.replace('{kernel}', kernelJson);
 
   return {
     task_id: 'scrape.review_summarize',
@@ -38,7 +39,8 @@ export function buildScrapeReviewSpec(
     metadata: {
       run_id: runId,
       task: 'scrape.review_summarize',
-      domain,
+      domain: kernel.domain,
+      kernel_hash: kernel.content_hash,
     },
   };
 }

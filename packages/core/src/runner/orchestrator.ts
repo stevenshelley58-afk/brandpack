@@ -128,6 +128,25 @@ export async function runTask(
       } else {
         outputs = response.outputs;
       }
+
+      // Detailed logging for debugging / traces
+      try {
+        // eslint-disable-next-line no-console
+        console.log('─────────────────────────────────────────────────');
+        // eslint-disable-next-line no-console
+        console.log(`[ORCHESTRATOR] Task: ${spec.task_id}`);
+        // eslint-disable-next-line no-console
+        console.log(`[ORCHESTRATOR] Provider: ${response.provider} | Model: ${response.model}`);
+        // eslint-disable-next-line no-console
+        console.log(`[ORCHESTRATOR] Duration: ${response.duration_ms}ms | Cost: $${response.cost_usd.toFixed(4)}`);
+        // eslint-disable-next-line no-console
+        console.log(`[ORCHESTRATOR] Outputs parsed: ${outputs.length} item(s)`);
+        const preview = JSON.stringify(outputs, null, 2);
+        // eslint-disable-next-line no-console
+        console.log(`[ORCHESTRATOR] Output preview: ${preview.length > 800 ? preview.slice(0, 800) + ' …' : preview}`);
+        // eslint-disable-next-line no-console
+        console.log('─────────────────────────────────────────────────');
+      } catch {}
     } catch (error) {
       return {
         success: false,
@@ -150,6 +169,22 @@ export async function runTask(
     
     if (!options.skipValidation && validator) {
       validation = validator(spec.task_id, outputs, config);
+      try {
+        // eslint-disable-next-line no-console
+        console.log(`[VALIDATOR] Task: ${spec.task_id}`);
+        // eslint-disable-next-line no-console
+        console.log(`[VALIDATOR] Passed: ${validation.passed}`);
+        if (validation.errors.length > 0) {
+          // eslint-disable-next-line no-console
+          console.error('[VALIDATOR] Errors:', validation.errors);
+        }
+        if (validation.warnings.length > 0) {
+          // eslint-disable-next-line no-console
+          console.warn('[VALIDATOR] Warnings:', validation.warnings);
+        }
+        // eslint-disable-next-line no-console
+        console.log('─────────────────────────────────────────────────');
+      } catch {}
     }
     
     return {

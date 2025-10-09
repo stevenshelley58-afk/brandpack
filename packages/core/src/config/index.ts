@@ -1,4 +1,4 @@
-export { loadPromptsConfig } from './loader.js';
+export { loadPromptsConfig, clearConfigCache } from './loader.js';
 export {
   validateConfig,
   type BrandPackConfig,

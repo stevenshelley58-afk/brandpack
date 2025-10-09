@@ -3,7 +3,7 @@
   "version": "2.0.0",
   "updated_at": "2025-01-15T00:00:00Z",
   "global": {
-    "provider": "noop-llm",
+    "provider": "openai",
     "log_level": "info",
     "cache_enabled": true,
     "cache_ttl_seconds": {
@@ -15,15 +15,15 @@
   "calls": {
     "scrape.review_summarize": {
       "model": {
-        "provider": "noop-llm",
+        "provider": "openai",
         "name": "gpt-4o-mini",
         "temperature": 0.1,
         "max_tokens": 2000
       },
       "prompt": {
-        "system": "You are a web crawler constrained to tight safety limits. Collect only the strongest supporting facts for the brand review.",
-        "user_template": "Crawl {domain} then summarize hard evidence for tone, proof, pricing, and target audience. Respect crawl caps. Output JSON citations keyed to source handles.",
-        "variables": ["domain"],
+        "system": "You are a brand analyst. Extract tone, voice, proof points, pricing cues, target audience, and citations from the brand kernel. Return valid JSON only.",
+        "user_template": "Brand kernel:\n{kernel}\n\nAnalyze this kernel and return a JSON object with this exact structure:\n{\n  \"tone\": [\"string\", \"string\"],\n  \"voice\": [\"string\", \"string\"],\n  \"proof_points\": [\"string\", \"string\"],\n  \"pricing_cues\": [\"string\", \"string\"],\n  \"target_audience\": \"string\",\n  \"citations\": [\"string\", \"string\"]\n}",
+        "variables": ["kernel"],
         "outputs_expected": 1
       },
       "runtime": {
@@ -41,14 +41,14 @@
     },
     "ideas.generate": {
       "model": {
-        "provider": "noop-llm",
+        "provider": "openai",
         "name": "gpt-4o-mini",
         "temperature": 0.9,
         "max_tokens": 3500
       },
       "prompt": {
-        "system": "You are a senior creative strategist. Output ONLY valid JSON. No markdown, no explanations, just the JSON array.",
-        "user_template": "Brand kernel:\n{kernel}\n\nReturn a JSON array of EXACTLY 20 campaign ideas. Format:\n[\n  {{\"id\": \"idea-01\", \"headline\": \"Your headline here\", \"angle\": \"The creative angle\", \"audience\": \"Target audience\", \"format\": \"LinkedIn carousel\", \"supporting_evidence_keys\": [\"feature.x\", \"proof.y\"]}},\n  {{\"id\": \"idea-02\", \"headline\": \"...\", \"angle\": \"...\", \"audience\": \"...\", \"format\": \"...\", \"supporting_evidence_keys\": [\"...\"]}},\n  ...18 more ideas\n]\n\nDo NOT wrap in an object. Return the array directly. All 20 ideas must have: id, headline, angle, audience, format, supporting_evidence_keys.",
+        "system": "You are a senior creative strategist. You MUST produce exactly 20 distinct campaign concepts as a JSON array. Each idea must reference real evidence from the brand kernel. Use the field name 'supporting_evidence_keys' (NOT 'evidence_keys'). Return ONLY the JSON array (no markdown).",
+        "user_template": "Brand kernel:\n{kernel}\n\nProduce exactly 20 campaign ideas as a JSON array with this structure:\n[\n  {\"id\": \"idea-01\", \"headline\": \"...\", \"angle\": \"...\", \"audience\": \"...\", \"format\": \"LinkedIn carousel\", \"supporting_evidence_keys\": [\"...\"]},\n  ...(20 total)\n]\n\nEach idea MUST have all 6 fields: id, headline, angle, audience, format, supporting_evidence_keys.",
         "variables": ["kernel"],
         "outputs_expected": 20
       },
@@ -60,7 +60,7 @@
     },
     "copy.generate": {
       "model": {
-        "provider": "noop-llm",
+        "provider": "openai",
         "name": "gpt-4o-mini",
         "temperature": 0.7,
         "max_tokens": 4500
@@ -79,7 +79,7 @@
     },
     "image.brief_generate": {
       "model": {
-        "provider": "noop-llm",
+        "provider": "openai",
         "name": "gpt-4o-mini",
         "temperature": 0.8,
         "max_tokens": 1200

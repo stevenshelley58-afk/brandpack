@@ -113,6 +113,12 @@ export default function Home() {
       }
 
       setKernel(data.kernel);
+      
+      // Log kernel to console for debugging
+      console.log('=== KERNEL DATA ===');
+      console.log(JSON.stringify(data.kernel, null, 2));
+      console.log('==================');
+      
       setStep('review');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to scrape domain');
@@ -141,7 +147,7 @@ export default function Home() {
       }
 
       setReview(data.review);
-      setStep('ideas');
+      // Don't auto-advance - let user review the data first
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to generate review');
     } finally {

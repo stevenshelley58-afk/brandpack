@@ -271,12 +271,7 @@ export function validateTaskOutput(
       return validateImageBrief(outputs, config);
     
     case 'scrape.review_summarize':
-      // Basic validation - just check it's valid JSON
-      return {
-        passed: true,
-        errors: [],
-        warnings: outputs.length === 0 ? ['No review summary generated'] : [],
-      };
+      return validateReview(outputs, config);
     
     default:
       return {
@@ -285,5 +280,48 @@ export function validateTaskOutput(
         warnings: [`No validator defined for task: ${taskId}`],
       };
   }
+}
+
+/**
+ * Validate review output
+ */
+export function validateReview(
+  outputs: unknown[],
+  _config: PromptsConfig,
+): ValidationResult {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+
+  if (outputs.length !== 1) {
+    errors.push(`Expected 1 review, got ${outputs.length}`);
+    return { passed: false, errors, warnings };
+  }
+
+  const review = outputs[0];
+  if (typeof review !== 'object' || review === null) {
+    errors.push('Review must be an object');
+    return { passed: false, errors, warnings };
+  }
+
+  const r = review as Record<string, unknown>;
+  const requiredFields = ['tone', 'voice', 'proof_points', 'pricing_cues', 'target_audience', 'citations'];
+  for (const field of requiredFields) {
+    if (!(field in r)) {
+      errors.push(`Missing required field: ${field}`);
+    }
+  }
+
+  if (r.tone && !Array.isArray(r.tone)) errors.push('tone must be an array');
+  if (r.voice && !Array.isArray(r.voice)) errors.push('voice must be an array');
+  if (r.proof_points && !Array.isArray(r.proof_points)) errors.push('proof_points must be an array');
+  if (r.pricing_cues && !Array.isArray(r.pricing_cues)) errors.push('pricing_cues must be an array');
+  if (r.citations && !Array.isArray(r.citations)) errors.push('citations must be an array');
+  if (r.target_audience && typeof r.target_audience !== 'string') errors.push('target_audience must be a string');
+
+  return {
+    passed: errors.length === 0,
+    errors,
+    warnings,
+  };
 }
 
