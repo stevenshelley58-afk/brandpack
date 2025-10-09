@@ -3,10 +3,10 @@
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./src",
-    "baseUrl": "./src",
+    "baseUrl": ".",
     "paths": {
-      "@brandpack/core": ["../../core/src/index"],
-      "@brandpack/core/*": ["../../core/src/*"]
+      "@brandpack/core": ["../core/src/index"],
+      "@brandpack/core/*": ["../core/src/*"]
     }
   },
   "include": ["src/**/*"],
