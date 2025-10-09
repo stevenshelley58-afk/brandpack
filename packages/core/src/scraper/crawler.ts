@@ -52,7 +52,6 @@ export async function crawlSite(options: CrawlOptions): Promise<CrawlResult> {
   let sitemapUsed = false;
 
   const controller = new AbortController();
-  const signals = [controller.signal];
   if (options.signal) {
     options.signal.addEventListener('abort', () => controller.abort(), {
       once: true,

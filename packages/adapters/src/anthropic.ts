@@ -10,7 +10,7 @@ import {
   AdapterError,
   AdapterErrorCode,
   calculateCost,
-} from '@brandpack/core/types/adapter';
+} from '@brandpack/core';
 
 const DEFAULT_MODEL = 'claude-3-5-sonnet-20241022';
 
@@ -96,10 +96,11 @@ export class AnthropicLLMAdapter implements LLMAdapter {
     const start = Date.now();
 
     try {
+      // Non-streaming request - cast to Message type
       const response = await this.client.messages.create(
         this.buildRequest(spec, model),
         { timeout: this.timeoutMs },
-      );
+      ) as Anthropic.Message;
 
       const usage = this.normalizeUsage(response.usage);
       const content = this.extractContent(response.content);
@@ -141,17 +142,9 @@ export class AnthropicLLMAdapter implements LLMAdapter {
       stop_sequences: spec.constraints.stop_sequences,
     };
 
-    if (spec.response_format === 'json') {
-      params.response_format = { type: 'json_object' };
-    } else if (spec.response_format === 'structured' && spec.schema) {
-      params.response_format = {
-        type: 'json_schema',
-        json_schema: {
-          name: spec.task_id ?? 'structured_output',
-          schema: spec.schema,
-        },
-      };
-    }
+    // Note: Anthropic SDK doesn't support response_format like OpenAI does
+    // For JSON output, rely on prompting to ask for JSON format
+    // TODO: Implement JSON mode when Anthropic adds official support
 
     return params;
   }
@@ -161,7 +154,7 @@ export class AnthropicLLMAdapter implements LLMAdapter {
   ): string {
     const parts: string[] = [];
     for (const block of blocks) {
-      if (block.type === 'text') {
+      if (block.type === 'text' && block.text) {
         parts.push(block.text);
       } else if (
         block.type === 'json' &&
@@ -211,8 +204,10 @@ export class AnthropicLLMAdapter implements LLMAdapter {
   private resolveModel(spec: LLMSpec): string {
     const requested =
       (spec.metadata?.model as string | undefined) ??
-      spec.metadata?.provider_model;
-    return requested && requested.length > 0 ? requested : this.defaultModel;
+      (spec.metadata?.provider_model as string | undefined);
+    return requested && typeof requested === 'string' && requested.length > 0
+      ? requested
+      : this.defaultModel;
   }
 
   private resolvePricing(model: string) {

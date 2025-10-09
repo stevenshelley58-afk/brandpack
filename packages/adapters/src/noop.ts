@@ -3,7 +3,7 @@ import type {
   ImageAdapter,
   ImageBrief,
   ImageConfig,
-  ImageResult,
+  AdapterImageResult as ImageResult,
   LLMAdapter,
   LLMSpec,
   TokenUsage,
@@ -30,9 +30,15 @@ export class NoopLLMAdapter implements LLMAdapter {
   async execute(spec: LLMSpec): Promise<AdapterResponse> {
     const start = now();
     const usage = usageFromSpec(spec);
-    const output = [
-      `[noop::${spec.task_id}] ${spec.response_format.toUpperCase()} response placeholder`,
-    ];
+    
+    // Generate appropriate mock data based on task_id and response_format
+    let output: string[];
+    
+    if (spec.response_format === 'json' || spec.response_format === 'structured') {
+      output = [this.generateMockJSON(spec.task_id)];
+    } else {
+      output = [`[noop::${spec.task_id}] TEXT response placeholder`];
+    }
 
     return {
       outputs: output,
@@ -52,6 +58,68 @@ export class NoopLLMAdapter implements LLMAdapter {
         cached: false,
       },
     };
+  }
+  
+  private generateMockJSON(taskId: string): string {
+    // Generate realistic mock data based on task type
+    if (taskId.includes('ideas')) {
+      // Generate 20 mock ideas
+      const ideas = Array.from({ length: 20 }, (_, i) => ({
+        id: `idea-${String(i + 1).padStart(2, '0')}`,
+        headline: `Mock Campaign Idea ${i + 1}`,
+        angle: 'Noop mock angle',
+        audience: 'Mock target audience',
+        format: 'LinkedIn carousel',
+        supporting_evidence_keys: ['mock.evidence.1', 'mock.evidence.2'],
+      }));
+      return JSON.stringify(ideas);
+    }
+    
+    if (taskId.includes('copy')) {
+      // Generate 5 copy blocks
+      const copy = {
+        hook: { content: 'Mock hook', char_count: 9 },
+        context: { content: 'Mock context with details', char_count: 25 },
+        proof: { content: 'Mock proof point', char_count: 16 },
+        objection: { content: 'Mock objection handler', char_count: 22 },
+        cta: { content: 'Mock call to action', char_count: 19 },
+      };
+      return JSON.stringify(copy);
+    }
+    
+    if (taskId.includes('image') || taskId.includes('brief')) {
+      // Generate image brief
+      const brief = {
+        aspect_ratio: '4:5',
+        safe_zone_top: 0.15,
+        safe_zone_bottom: 0.15,
+        visual_direction: 'Mock visual direction for noop test',
+        focal_point: 'center',
+        copy_overlay_guidance: 'Place text in safe zones',
+        evidence_keys: ['mock.evidence.1'],
+      };
+      return JSON.stringify(brief);
+    }
+    
+    if (taskId.includes('review') || taskId.includes('summarize')) {
+      // Generate review summary
+      const review = {
+        tone: ['professional', 'confident'],
+        voice: ['clear', 'concise'],
+        proof_points: ['Mock proof 1', 'Mock proof 2'],
+        pricing_cues: ['Mock pricing'],
+        target_audience: 'Mock audience',
+        citations: ['home', 'about'],
+      };
+      return JSON.stringify(review);
+    }
+    
+    // Default mock JSON
+    return JSON.stringify({
+      mock: true,
+      task_id: taskId,
+      message: 'Noop adapter mock response',
+    });
   }
 
   estimateCost(): number {

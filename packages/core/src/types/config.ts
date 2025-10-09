@@ -230,6 +230,57 @@ export interface Preset {
 }
 
 /**
+ * Actual prompts.json structure
+ * (simpler than full Config, matches what's actually in the file)
+ */
+export interface PromptsConfig {
+  version: string;
+  updated_at: string;
+  global: {
+    provider: string;
+    log_level: string;
+    cache_enabled: boolean;
+    cache_ttl_seconds?: {
+      scrape: number;
+      llm: number;
+      image: number;
+    };
+  };
+  calls: {
+    [callId: string]: {
+      model: {
+        provider: string;
+        name: string;
+        temperature: number;
+        top_p?: number;
+        max_tokens: number;
+      };
+      prompt: {
+        system: string;
+        user_template: string;
+        variables: string[];
+        outputs_expected: number;
+      };
+      runtime: {
+        timeout_ms: number;
+        max_retries: number;
+        cost_usd_limit: number;
+        crawl?: {
+          max_pages: number;
+          max_total_kb: number;
+          max_concurrency: number;
+          per_request_timeout_ms: number;
+          total_timeout_ms: number;
+        };
+      };
+    };
+  };
+  validation?: {
+    banned_phrases?: string[];
+  };
+}
+
+/**
  * Config override stored in database
  */
 export interface ConfigOverride {

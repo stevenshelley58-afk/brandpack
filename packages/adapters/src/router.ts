@@ -2,10 +2,10 @@ import type {
   AdapterResponse,
   ImageBrief,
   ImageConfig,
-  ImageResult,
+  AdapterImageResult as ImageResult,
   LLMSpec,
 } from '@brandpack/core';
-import { AdapterError, AdapterErrorCode } from '@brandpack/core/types/adapter';
+import { AdapterError, AdapterErrorCode } from '@brandpack/core';
 import { llmRegistry, imageRegistry } from './registry.js';
 
 function normalizeProvider(

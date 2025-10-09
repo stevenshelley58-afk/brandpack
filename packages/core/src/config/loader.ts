@@ -1,5 +1,6 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
+import type { PromptsConfig } from '../types/config.js';
 
 export interface LoadConfigOptions {
   /**
@@ -12,10 +13,34 @@ export interface LoadConfigOptions {
 }
 
 let cachedPath: string | null = null;
-let cachedPayload: unknown = null;
+let cachedPayload: PromptsConfig | null = null;
+
+// Find workspace root by looking for data/config/prompts.json
+// In monorepo: workspace root is 2-3 levels up from app
+function findWorkspaceRoot(): string {
+  let current = process.cwd();
+  const maxLevelsUp = 5;
+  
+  for (let i = 0; i < maxLevelsUp; i++) {
+    const configPath = path.join(current, 'data', 'config', 'prompts.json');
+    try {
+      // Check if file exists synchronously for performance
+      require('fs').accessSync(configPath);
+      return current;
+    } catch {
+      // File doesn't exist, try parent directory
+      const parent = path.dirname(current);
+      if (parent === current) break; // Reached filesystem root
+      current = parent;
+    }
+  }
+  
+  // Fallback to cwd
+  return process.cwd();
+}
 
 const DEFAULT_CONFIG_PATH = path.resolve(
-  process.cwd(),
+  findWorkspaceRoot(),
   'data',
   'config',
   'prompts.json',
@@ -23,7 +48,7 @@ const DEFAULT_CONFIG_PATH = path.resolve(
 
 export async function loadPromptsConfig(
   options: LoadConfigOptions = {},
-): Promise<unknown> {
+): Promise<PromptsConfig> {
   const resolvedPath = path.resolve(options.configPath ?? DEFAULT_CONFIG_PATH);
 
   if (!options.forceReload && cachedPath === resolvedPath && cachedPayload) {
@@ -31,7 +56,7 @@ export async function loadPromptsConfig(
   }
 
   const contents = await fs.readFile(resolvedPath, 'utf-8');
-  const parsed = JSON.parse(contents);
+  const parsed = JSON.parse(contents) as PromptsConfig;
 
   cachedPath = resolvedPath;
   cachedPayload = parsed;

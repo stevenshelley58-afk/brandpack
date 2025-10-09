@@ -20,12 +20,17 @@ export interface ScoreConfig {
   }>;
 }
 
-const DEFAULT_WEIGHTS = {
+const DEFAULT_WEIGHTS: {
+  clarity: number;
+  proof: number;
+  emotion: number;
+  brand_fit: number;
+} = {
   clarity: 0.3,
   proof: 0.3,
   emotion: 0.2,
   brand_fit: 0.2,
-} as const;
+};
 
 export function scoreCandidates(
   candidates: RankCandidate[],
@@ -68,7 +73,12 @@ export function scoreCandidates(
   return results.sort((a, b) => b.score.total - a.score.total);
 }
 
-function normalizeWeights(weights: ScoreConfig['weights'] & typeof DEFAULT_WEIGHTS) {
+function normalizeWeights(weights: {
+  clarity?: number;
+  proof?: number;
+  emotion?: number;
+  brand_fit?: number;
+}) {
   const sum =
     (weights?.clarity ?? 0) +
     (weights?.proof ?? 0) +

@@ -14,6 +14,7 @@ export type {
   AdapterResponse,
   TokenUsage,
   ImageAdapter,
+  ImageBrief,
   ImageBrief as AdapterImageBrief,
   ImageConfig,
   ImageResult as AdapterImageResult,

@@ -3,7 +3,7 @@
   "version": "2.0.0",
   "updated_at": "2025-01-15T00:00:00Z",
   "global": {
-    "provider": "anthropic",
+    "provider": "openai",
     "log_level": "info",
     "cache_enabled": true,
     "cache_ttl_seconds": {
@@ -15,7 +15,7 @@
   "calls": {
     "scrape.review_summarize": {
       "model": {
-        "provider": "anthropic",
+        "provider": "openai",
         "name": "claude-3-haiku-20240307",
         "temperature": 0.1,
         "max_tokens": 2000
@@ -41,14 +41,14 @@
     },
     "ideas.generate": {
       "model": {
-        "provider": "anthropic",
-        "name": "claude-3-5-sonnet-20241022",
+        "provider": "openai",
+        "name": "gpt-4o-mini",
         "temperature": 0.9,
         "max_tokens": 3500
       },
       "prompt": {
-        "system": "You are a senior creative strategist. Produce 20 distinct campaign concepts. Each idea must reference real evidence from the brand kernel.",
-        "user_template": "Brand kernel:\n{kernel}\n\nProduce 20 ideas. For each include: headline, angle, audience, format, supporting_evidence_keys.",
+        "system": "You are a senior creative strategist. Output ONLY valid JSON. No markdown, no explanations, just the JSON array.",
+        "user_template": "Brand kernel:\n{kernel}\n\nReturn a JSON array of EXACTLY 20 campaign ideas. Format:\n[\n  {{\"id\": \"idea-01\", \"headline\": \"Your headline here\", \"angle\": \"The creative angle\", \"audience\": \"Target audience\", \"format\": \"LinkedIn carousel\", \"supporting_evidence_keys\": [\"feature.x\", \"proof.y\"]}},\n  {{\"id\": \"idea-02\", \"headline\": \"...\", \"angle\": \"...\", \"audience\": \"...\", \"format\": \"...\", \"supporting_evidence_keys\": [\"...\"]}},\n  ...18 more ideas\n]\n\nDo NOT wrap in an object. Return the array directly. All 20 ideas must have: id, headline, angle, audience, format, supporting_evidence_keys.",
         "variables": ["kernel"],
         "outputs_expected": 20
       },
@@ -60,14 +60,14 @@
     },
     "copy.generate": {
       "model": {
-        "provider": "anthropic",
+        "provider": "openai",
         "name": "claude-3-5-sonnet-20241022",
         "temperature": 0.7,
         "max_tokens": 4500
       },
       "prompt": {
-        "system": "You are an on-brand copywriter. Produce five sequential blocks for the selected idea. Carry narrative continuity and cite evidence keys for every claim.",
-        "user_template": "Brand kernel:\n{kernel}\n\nSelected idea:\n{idea}\n\nReturn JSON with five blocks matching slots: hook, context, proof, objection, cta. Include character counts and evidence keys.",
+        "system": "You are an on-brand copywriter. Produce five sequential blocks for the selected idea in JSON format. Carry narrative continuity and cite evidence keys for every claim.",
+        "user_template": "Brand kernel:\n{kernel}\n\nSelected idea:\n{idea}\n\nReturn valid JSON with five blocks matching slots: hook, context, proof, objection, cta. Include character counts and evidence keys.",
         "variables": ["kernel", "idea"],
         "outputs_expected": 5
       },
@@ -85,8 +85,8 @@
         "max_tokens": 1200
       },
       "prompt": {
-        "system": "You are an art director. Build a concise image brief honoring 4:5 aspect ratio and safe zones.",
-        "user_template": "Brand kernel:\n{kernel}\n\nIdea:\n{idea}\n\nReturn JSON with: aspect_ratio (4:5), safe_zone_top (0.15), safe_zone_bottom (0.15), visual_direction, focal_point, copy_overlay_guidance, evidence_keys.",
+        "system": "You are an art director. Build a concise image brief in JSON format honoring 4:5 aspect ratio and safe zones.",
+        "user_template": "Brand kernel:\n{kernel}\n\nIdea:\n{idea}\n\nReturn valid JSON with: aspect_ratio (4:5), safe_zone_top (0.15), safe_zone_bottom (0.15), visual_direction, focal_point, copy_overlay_guidance, evidence_keys.",
         "variables": ["kernel", "idea"],
         "outputs_expected": 1
       },

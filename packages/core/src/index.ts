@@ -6,6 +6,7 @@
 
 // Export all types
 export * from './types';
+export type { PromptsConfig } from './types/config.js';
 
 // Config utilities
 export {
@@ -45,7 +46,23 @@ export {
   type SlopCheckOptions,
   type SlopFlag,
 } from './ranker';
-// export * from './scraper';
-// export * from './kernel';
-// export * from './runner';
-// export * from './ranker';
+
+// Runner exports
+export {
+  buildScrapeReviewSpec,
+  buildIdeasGenerateSpec,
+  buildCopyGenerateSpec,
+  buildImageBriefSpec,
+  getCallConfig,
+  runTask,
+  runTaskBatch,
+  validateTaskOutput,
+  validateIdeas,
+  validateCopy,
+  validateImageBrief,
+  type TaskResult,
+  type RunTaskOptions,
+  type TaskExecutor,
+  type TaskValidator,
+  type ValidationResult,
+} from './runner';

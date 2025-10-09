@@ -1,0 +1,108 @@
+/**
+ * POST /api/image/brief
+ * 
+ * Generates image brief (4:5 with safe zones) from idea
+ * 
+ * Request body:
+ * {
+ *   "kernel": { ... },
+ *   "idea": { ... },
+ *   "run_id": "optional-run-id"
+ * }
+ * 
+ * Response:
+ * {
+ *   "success": true,
+ *   "brief": {
+ *     "aspect_ratio": "4:5",
+ *     "safe_zone_top": 0.15,
+ *     "safe_zone_bottom": 0.15,
+ *     "visual_direction": "...",
+ *     "focal_point": "...",
+ *     "copy_overlay_guidance": "...",
+ *     "evidence_keys": [...]
+ *   },
+ *   "validation": { ... },
+ *   "audit": { ... }
+ * }
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
+import {
+  buildImageBriefSpec,
+  runTask,
+  validateTaskOutput,
+  type KernelPayload,
+} from '@brandpack/core';
+import { loadPromptsConfig } from '@brandpack/core/config';
+import { routeSpec } from '@brandpack/adapters';
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { kernel, idea, run_id } = body;
+
+    if (!kernel || typeof kernel !== 'object') {
+      return NextResponse.json(
+        { success: false, error: 'kernel is required and must be an object' },
+        { status: 400 }
+      );
+    }
+
+    if (!idea || typeof idea !== 'object') {
+      return NextResponse.json(
+        { success: false, error: 'idea is required and must be an object' },
+        { status: 400 }
+      );
+    }
+
+    // Load config
+    const config = await loadPromptsConfig();
+
+    // Build spec
+    const spec = buildImageBriefSpec(
+      config,
+      kernel as KernelPayload,
+      idea as Record<string, unknown>,
+      run_id
+    );
+
+    // Execute through orchestrator
+    const result = await runTask(
+      spec,
+      config,
+      async (spec, provider) => routeSpec(spec, provider),
+      (taskId, outputs, config) => validateTaskOutput(taskId, outputs, config)
+    );
+
+    if (!result.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Task execution failed',
+          validation: result.validation,
+          audit: result.audit,
+        },
+        { status: 422 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      brief: result.outputs[0],
+      validation: result.validation,
+      audit: result.audit,
+    });
+
+  } catch (error) {
+    console.error('[/api/image/brief] Error:', error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error occurred',
+      },
+      { status: 500 }
+    );
+  }
+}
+

@@ -2,13 +2,25 @@
   "name": "@brandpack/adapters",
   "version": "0.1.0",
   "private": true,
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./src/index.ts",
-    "./anthropic": "./src/anthropic.ts",
-    "./openai": "./src/openai.ts",
-    "./noop": "./src/noop.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./anthropic": {
+      "types": "./dist/anthropic.d.ts",
+      "default": "./dist/anthropic.js"
+    },
+    "./openai": {
+      "types": "./dist/openai.d.ts",
+      "default": "./dist/openai.js"
+    },
+    "./noop": {
+      "types": "./dist/noop.d.ts",
+      "default": "./dist/noop.js"
+    }
   },
   "scripts": {
     "build": "tsc",
@@ -17,7 +29,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@brandpack/core": "workspace:*",
+    "@brandpack/core": "*",
     "@anthropic-ai/sdk": "^0.27.0",
     "openai": "^4.52.0"
   },

@@ -10,7 +10,7 @@ import {
   AdapterError,
   AdapterErrorCode,
   calculateCost,
-} from '@brandpack/core/types/adapter';
+} from '@brandpack/core';
 
 const DEFAULT_MODEL = 'gpt-4o-mini';
 
@@ -142,11 +142,11 @@ export class OpenAILLMAdapter implements LLMAdapter {
     };
 
     if (spec.response_format === 'json') {
-      (params as Record<string, unknown>).response_format = {
+      (params as any).response_format = {
         type: 'json_object',
       };
     } else if (spec.response_format === 'structured' && spec.schema) {
-      (params as Record<string, unknown>).response_format = {
+      (params as any).response_format = {
         type: 'json_schema',
         json_schema: {
           name: spec.task_id ?? 'structured_output',
@@ -196,8 +196,10 @@ export class OpenAILLMAdapter implements LLMAdapter {
   private resolveModel(spec: LLMSpec): string {
     const requested =
       (spec.metadata?.model as string | undefined) ??
-      spec.metadata?.provider_model;
-    return requested && requested.length > 0 ? requested : this.defaultModel;
+      (spec.metadata?.provider_model as string | undefined);
+    return requested && typeof requested === 'string' && requested.length > 0
+      ? requested
+      : this.defaultModel;
   }
 
   private resolvePricing(model: string) {

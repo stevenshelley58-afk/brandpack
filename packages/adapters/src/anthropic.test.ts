@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { AnthropicAdapter } from './anthropic';
+import { AnthropicLLMAdapter } from './anthropic';
 import type { LLMSpec } from '@brandpack/core';
 import { AdapterError } from '@brandpack/core';
 
@@ -13,9 +13,9 @@ vi.mock('@anthropic-ai/sdk', () => {
   };
 });
 
-const createAdapter = () => new AnthropicAdapter({ apiKey: 'test-key', model: 'claude-3-haiku-20240307' });
+const createAdapter = () => new AnthropicLLMAdapter({ apiKey: 'test-key', defaultModel: 'claude-3-haiku-20240307' });
 
-describe('AnthropicAdapter mapSpecToAnthropic', () => {
+describe('AnthropicLLMAdapter mapSpecToAnthropic', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -62,7 +62,7 @@ describe('AnthropicAdapter mapSpecToAnthropic', () => {
   });
 });
 
-describe('AnthropicAdapter extractOutputs', () => {
+describe('AnthropicLLMAdapter extractOutputs', () => {
   const baseResponse = {
     id: 'msg_1',
     type: 'message',
