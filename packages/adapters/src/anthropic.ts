@@ -5,6 +5,7 @@ import type {
   LLMAdapter,
   LLMSpec,
   TokenUsage,
+  ResponseFormat,
 } from '@brandpack/core';
 import {
   AdapterError,
@@ -96,17 +97,19 @@ export class AnthropicLLMAdapter implements LLMAdapter {
     const start = Date.now();
 
     try {
+      const params = this.mapSpecToAnthropic(spec, model);
+
       // Non-streaming request - cast to Message type
       const response = await this.client.messages.create(
-        this.buildRequest(spec, model),
+        params as MessageCreateParams,
         { timeout: this.timeoutMs },
       ) as Anthropic.Message;
 
       const usage = this.normalizeUsage(response.usage);
-      const content = this.extractContent(response.content);
+      const outputs = this.extractOutputs(response, spec.response_format);
 
       return {
-        outputs: [content],
+        outputs: outputs.length > 0 ? outputs : [''],
         usage,
         provider: this.provider,
         model,
@@ -123,7 +126,7 @@ export class AnthropicLLMAdapter implements LLMAdapter {
     }
   }
 
-  private buildRequest(
+  private mapSpecToAnthropic(
     spec: LLMSpec,
     model: string,
   ): MessageCreateParams {
@@ -142,29 +145,96 @@ export class AnthropicLLMAdapter implements LLMAdapter {
       stop_sequences: spec.constraints.stop_sequences,
     };
 
-    // Note: Anthropic SDK doesn't support response_format like OpenAI does
-    // For JSON output, rely on prompting to ask for JSON format
-    // TODO: Implement JSON mode when Anthropic adds official support
+    const responseFormat = this.resolveResponseFormat(spec);
+    if (responseFormat) {
+      (params as any).response_format = responseFormat;
+    }
 
     return params;
   }
 
-  private extractContent(
-    blocks: Array<{ type: string; text?: string; json?: unknown }>,
-  ): string {
+  private resolveResponseFormat(
+    spec: LLMSpec,
+  ): Record<string, unknown> | undefined {
+    if (spec.response_format === 'json') {
+      return { type: 'json' };
+    }
+
+    if (spec.response_format === 'structured' && spec.schema) {
+      return {
+        type: 'json_schema',
+        json_schema: {
+          name: spec.task_id ?? 'structured_output',
+          schema: spec.schema,
+        },
+      };
+    }
+
+    return undefined;
+  }
+
+  private extractOutputs(
+    response: Anthropic.Message,
+    format: ResponseFormat,
+  ): string[] {
+    const blocks = Array.isArray(response.content) ? response.content : [];
+
+    if (format === 'structured') {
+      const toolBlocks = blocks.filter(
+        (block: any) => block?.type === 'tool_use',
+      );
+
+      if (toolBlocks.length === 0) {
+        throw new AdapterError(
+          'Anthropic structured response missing tool output blocks.',
+          this.provider,
+          AdapterErrorCode.INVALID_REQUEST,
+          response,
+        );
+      }
+
+      return toolBlocks.map((block: any) => {
+        const payload =
+          block?.input ?? block?.output ?? block?.json ?? block?.content;
+
+        if (!payload || typeof payload !== 'object') {
+          throw new AdapterError(
+            'Anthropic structured response payload malformed.',
+            this.provider,
+            AdapterErrorCode.INVALID_REQUEST,
+            block,
+          );
+        }
+
+        try {
+          return JSON.stringify(payload);
+        } catch (error) {
+          throw new AdapterError(
+            'Failed to serialize Anthropic structured payload.',
+            this.provider,
+            AdapterErrorCode.INVALID_REQUEST,
+            error,
+          );
+        }
+      });
+    }
+
     const parts: string[] = [];
-    for (const block of blocks) {
-      if (block.type === 'text' && block.text) {
+
+    for (const block of blocks as any[]) {
+      if (block?.type === 'text' && typeof block.text === 'string') {
         parts.push(block.text);
       } else if (
-        block.type === 'json' &&
-        typeof block.json === 'object' &&
-        block.json !== null
+        block?.type === 'json' &&
+        block.json !== null &&
+        typeof block.json === 'object'
       ) {
         parts.push(JSON.stringify(block.json));
       }
     }
-    return parts.join('\n').trim();
+
+    const content = parts.join('\n').trim();
+    return content ? [content] : [];
   }
 
   private normalizeUsage(

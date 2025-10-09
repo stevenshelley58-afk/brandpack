@@ -22,6 +22,8 @@ if (process.env.ANTHROPIC_API_KEY) {
 if (process.env.OPENAI_API_KEY) {
   try {
     builtinLLM.push(new OpenAILLMAdapter());
+    // eslint-disable-next-line no-console
+    console.log('[adapters] ✅ OpenAI adapter registered successfully');
   } catch (error) {
     // eslint-disable-next-line no-console
     console.warn(
@@ -29,6 +31,9 @@ if (process.env.OPENAI_API_KEY) {
       (error as Error).message,
     );
   }
+} else {
+  // eslint-disable-next-line no-console
+  console.warn('[adapters] ⚠️ OPENAI_API_KEY not found - OpenAI adapter NOT registered');
 }
 
 const builtinImages = [new NoopImageAdapter()];

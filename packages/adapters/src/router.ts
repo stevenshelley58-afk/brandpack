@@ -20,6 +20,11 @@ export async function routeSpec(
   provider?: string,
 ): Promise<AdapterResponse> {
   const desired = normalizeProvider(provider, 'noop-llm');
+  
+  // Debug logging
+  console.log(`[ROUTER] Task: ${spec.task_id} | Requested provider: ${provider} | Using: ${desired}`);
+  console.log(`[ROUTER] Available adapters: ${Array.from(llmRegistry.list()).join(', ')}`);
+  
   const adapter = llmRegistry.get(desired);
 
   if (!adapter) {
