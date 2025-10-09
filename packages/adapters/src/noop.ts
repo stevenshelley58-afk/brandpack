@@ -76,13 +76,13 @@ export class NoopLLMAdapter implements LLMAdapter {
     }
     
     if (taskId.includes('copy')) {
-      // Generate 5 copy blocks
+      // Generate 5 copy blocks matching validator expectations
       const copy = {
-        hook: { content: 'Mock hook', char_count: 9 },
-        context: { content: 'Mock context with details', char_count: 25 },
-        proof: { content: 'Mock proof point', char_count: 16 },
-        objection: { content: 'Mock objection handler', char_count: 22 },
-        cta: { content: 'Mock call to action', char_count: 19 },
+        hook: { text: 'Mock hook copy', char_count: 14, evidence_keys: [] },
+        context: { text: 'Mock context with supporting details', char_count: 36, evidence_keys: [] },
+        proof: { text: 'Mock proof point with data', char_count: 26, evidence_keys: [] },
+        objection: { text: 'Mock objection handler response', char_count: 32, evidence_keys: [] },
+        cta: { text: 'Mock call to action', char_count: 19, evidence_keys: [] },
       };
       return JSON.stringify(copy);
     }
