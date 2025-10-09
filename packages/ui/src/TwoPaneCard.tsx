@@ -56,8 +56,7 @@ export function TwoPaneCard({
   const renderPane = (
     content: React.ReactNode,
     title: string,
-    subtitle?: string,
-    side: 'before' | 'after' = 'before'
+    subtitle?: string
   ) => (
     <div className="flex-1 min-w-0">
       <div className="mb-3">
@@ -81,7 +80,7 @@ export function TwoPaneCard({
       {collapsible && !isExpanded ? (
         // Collapsed state - show only before
         <div>
-          {renderPane(before, beforeTitle, beforeSubtitle, 'before')}
+          {renderPane(before, beforeTitle, beforeSubtitle)}
           
           <button
             onClick={() => setIsExpanded(true)}
@@ -122,7 +121,7 @@ export function TwoPaneCard({
             `.trim().replace(/\s+/g, ' ')}
           >
             {/* Before Pane */}
-            {renderPane(before, beforeTitle, beforeSubtitle, 'before')}
+            {renderPane(before, beforeTitle, beforeSubtitle)}
 
             {/* Divider */}
             <div
@@ -135,7 +134,7 @@ export function TwoPaneCard({
             />
 
             {/* After Pane */}
-            {renderPane(after, afterTitle, afterSubtitle, 'after')}
+            {renderPane(after, afterTitle, afterSubtitle)}
           </div>
 
           {collapsible && (

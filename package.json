@@ -1,6 +1,13 @@
 {
   "name": "brandpack",
   "private": true,
-  "workspaces": ["apps/*", "packages/*"]
+  "workspaces": ["apps/*", "packages/*"],
+  "scripts": {
+    "build": "npm run build:packages && npm run build:web",
+    "build:packages": "npm run build --workspace=@brandpack/core && npm run build --workspace=@brandpack/adapters && npm run build --workspace=@brandpack/ui",
+    "build:web": "npm run build --workspace=web",
+    "dev": "npm run build:packages && npm run dev --workspace=web",
+    "install:all": "npm install && npm run build:packages"
+  }
 }
 
