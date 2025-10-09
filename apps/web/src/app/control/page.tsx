@@ -48,8 +48,8 @@ export default function ControlCenter() {
   const [config, setConfig] = useState<PromptsConfig | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [selectedTask, setSelectedTask] = useState<string>('ideas.generate');
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+  const [expandedCards, setExpandedCards] = useState<{ [key: string]: boolean }>({});
 
   // Load current config
   useEffect(() => {
@@ -109,8 +109,24 @@ export default function ControlCenter() {
     );
   }
 
-  const taskConfig = config.calls[selectedTask];
   const taskNames = Object.keys(config.calls);
+
+  const toggleCard = (taskId: string) => {
+    setExpandedCards(prev => ({ ...prev, [taskId]: !prev[taskId] }));
+  };
+
+  const updateTaskConfig = (taskId: string, updates: Partial<TaskConfig>) => {
+    setConfig({
+      ...config,
+      calls: {
+        ...config.calls,
+        [taskId]: {
+          ...config.calls[taskId],
+          ...updates,
+        }
+      }
+    });
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
@@ -162,233 +178,204 @@ export default function ControlCenter() {
           </div>
         </div>
 
-        {/* Task Selection */}
-        <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-6 mb-6">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
-            Task Configuration
+        {/* Task Cards - One per LLM Call */}
+        <div className="mb-6">
+          <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+            Task Configurations ({taskNames.length} LLM Calls)
           </h2>
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Select Task
-            </label>
-            <select
-              value={selectedTask}
-              onChange={(e) => setSelectedTask(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-            >
-              {taskNames.map(taskId => (
-                <option key={taskId} value={taskId}>{taskId}</option>
-              ))}
-            </select>
-          </div>
+          <div className="space-y-4">
+            {taskNames.map(taskId => {
+              const taskConfig = config.calls[taskId];
+              const isExpanded = expandedCards[taskId];
+              
+              return (
+                <div key={taskId} className="bg-white dark:bg-gray-900 rounded-lg border-2 border-gray-200 dark:border-gray-800 overflow-hidden">
+                  {/* Card Header - Always Visible */}
+                  <div 
+                    className="p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                    onClick={() => toggleCard(taskId)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl">
+                          {taskId.includes('scrape') ? '🌐' : 
+                           taskId.includes('review') ? '📋' :
+                           taskId.includes('ideas') ? '💡' :
+                           taskId.includes('copy') ? '📝' :
+                           taskId.includes('brief') ? '🎨' : '🖼️'}
+                        </span>
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                            {taskId}
+                          </h3>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            {taskConfig.model.provider} • {taskConfig.model.name} • temp: {taskConfig.model.temperature}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
+                          {taskConfig.model.max_tokens} tokens
+                        </span>
+                        <span className="text-2xl text-gray-400">
+                          {isExpanded ? '▼' : '▶'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
 
-          {/* Model Settings */}
-          <div className="mb-6">
-            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-3">Model Settings</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Provider
-                </label>
-                <select
-                  value={taskConfig.model.provider}
-                  onChange={(e) => setConfig({
-                    ...config,
-                    calls: {
-                      ...config.calls,
-                      [selectedTask]: {
-                        ...taskConfig,
-                        model: { ...taskConfig.model, provider: e.target.value as Provider }
-                      }
-                    }
-                  })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                >
-                  <option value="anthropic">Anthropic</option>
-                  <option value="openai">OpenAI</option>
-                  <option value="noop-llm">Noop</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Model Name
-                </label>
-                <input
-                  type="text"
-                  value={taskConfig.model.name}
-                  onChange={(e) => setConfig({
-                    ...config,
-                    calls: {
-                      ...config.calls,
-                      [selectedTask]: {
-                        ...taskConfig,
-                        model: { ...taskConfig.model, name: e.target.value }
-                      }
-                    }
-                  })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                  placeholder="gpt-4o-mini"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Temperature ({taskConfig.model.temperature})
-                </label>
-                <input
-                  type="range"
-                  min="0"
-                  max="2"
-                  step="0.1"
-                  value={taskConfig.model.temperature}
-                  onChange={(e) => setConfig({
-                    ...config,
-                    calls: {
-                      ...config.calls,
-                      [selectedTask]: {
-                        ...taskConfig,
-                        model: { ...taskConfig.model, temperature: parseFloat(e.target.value) }
-                      }
-                    }
-                  })}
-                  className="w-full"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Max Tokens
-                </label>
-                <input
-                  type="number"
-                  value={taskConfig.model.max_tokens}
-                  onChange={(e) => setConfig({
-                    ...config,
-                    calls: {
-                      ...config.calls,
-                      [selectedTask]: {
-                        ...taskConfig,
-                        model: { ...taskConfig.model, max_tokens: parseInt(e.target.value) }
-                      }
-                    }
-                  })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                />
-              </div>
-            </div>
-          </div>
+                  {/* Card Body - Expandable */}
+                  {isExpanded && (
+                    <div className="p-6 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-950">
+                      {/* Model Settings */}
+                      <div className="mb-6">
+                        <h4 className="text-md font-semibold text-gray-900 dark:text-gray-100 mb-3">⚙️ Model Settings</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                              Provider
+                            </label>
+                            <select
+                              value={taskConfig.model.provider}
+                              onChange={(e) => updateTaskConfig(taskId, {
+                                model: { ...taskConfig.model, provider: e.target.value as Provider }
+                              })}
+                              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm"
+                            >
+                              <option value="anthropic">Anthropic</option>
+                              <option value="openai">OpenAI</option>
+                              <option value="noop-llm">Noop</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                              Model Name
+                            </label>
+                            <input
+                              type="text"
+                              value={taskConfig.model.name}
+                              onChange={(e) => updateTaskConfig(taskId, {
+                                model: { ...taskConfig.model, name: e.target.value }
+                              })}
+                              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                              Temperature ({taskConfig.model.temperature})
+                            </label>
+                            <input
+                              type="range"
+                              min="0"
+                              max="2"
+                              step="0.1"
+                              value={taskConfig.model.temperature}
+                              onChange={(e) => updateTaskConfig(taskId, {
+                                model: { ...taskConfig.model, temperature: parseFloat(e.target.value) }
+                              })}
+                              className="w-full"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                              Max Tokens
+                            </label>
+                            <input
+                              type="number"
+                              value={taskConfig.model.max_tokens}
+                              onChange={(e) => updateTaskConfig(taskId, {
+                                model: { ...taskConfig.model, max_tokens: parseInt(e.target.value) }
+                              })}
+                              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm"
+                            />
+                          </div>
+                        </div>
+                      </div>
 
-          {/* Prompts */}
-          <div className="mb-6">
-            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-3">Prompts</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  System Prompt
-                </label>
-                <textarea
-                  value={taskConfig.prompt.system}
-                  onChange={(e) => setConfig({
-                    ...config,
-                    calls: {
-                      ...config.calls,
-                      [selectedTask]: {
-                        ...taskConfig,
-                        prompt: { ...taskConfig.prompt, system: e.target.value }
-                      }
-                    }
-                  })}
-                  rows={4}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 font-mono text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  User Template
-                </label>
-                <textarea
-                  value={taskConfig.prompt.user_template}
-                  onChange={(e) => setConfig({
-                    ...config,
-                    calls: {
-                      ...config.calls,
-                      [selectedTask]: {
-                        ...taskConfig,
-                        prompt: { ...taskConfig.prompt, user_template: e.target.value }
-                      }
-                    }
-                  })}
-                  rows={6}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 font-mono text-sm"
-                />
-              </div>
-            </div>
-          </div>
+                      {/* Prompts */}
+                      <div className="mb-6">
+                        <h4 className="text-md font-semibold text-gray-900 dark:text-gray-100 mb-3">💬 Prompts</h4>
+                        <div className="space-y-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                              System Prompt
+                            </label>
+                            <textarea
+                              value={taskConfig.prompt.system}
+                              onChange={(e) => updateTaskConfig(taskId, {
+                                prompt: { ...taskConfig.prompt, system: e.target.value }
+                              })}
+                              rows={3}
+                              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 font-mono text-xs"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                              User Template
+                            </label>
+                            <textarea
+                              value={taskConfig.prompt.user_template}
+                              onChange={(e) => updateTaskConfig(taskId, {
+                                prompt: { ...taskConfig.prompt, user_template: e.target.value }
+                              })}
+                              rows={4}
+                              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 font-mono text-xs"
+                            />
+                          </div>
+                        </div>
+                      </div>
 
-          {/* Runtime Settings */}
-          <div>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-3">Runtime Settings</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Timeout (ms)
-                </label>
-                <input
-                  type="number"
-                  value={taskConfig.runtime.timeout_ms}
-                  onChange={(e) => setConfig({
-                    ...config,
-                    calls: {
-                      ...config.calls,
-                      [selectedTask]: {
-                        ...taskConfig,
-                        runtime: { ...taskConfig.runtime, timeout_ms: parseInt(e.target.value) }
-                      }
-                    }
-                  })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Max Retries
-                </label>
-                <input
-                  type="number"
-                  value={taskConfig.runtime.max_retries}
-                  onChange={(e) => setConfig({
-                    ...config,
-                    calls: {
-                      ...config.calls,
-                      [selectedTask]: {
-                        ...taskConfig,
-                        runtime: { ...taskConfig.runtime, max_retries: parseInt(e.target.value) }
-                      }
-                    }
-                  })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Cost Limit (USD)
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={taskConfig.runtime.cost_usd_limit}
-                  onChange={(e) => setConfig({
-                    ...config,
-                    calls: {
-                      ...config.calls,
-                      [selectedTask]: {
-                        ...taskConfig,
-                        runtime: { ...taskConfig.runtime, cost_usd_limit: parseFloat(e.target.value) }
-                      }
-                    }
-                  })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                />
-              </div>
-            </div>
+                      {/* Runtime Settings */}
+                      <div>
+                        <h4 className="text-md font-semibold text-gray-900 dark:text-gray-100 mb-3">⏱️ Runtime Settings</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                              Timeout (ms)
+                            </label>
+                            <input
+                              type="number"
+                              value={taskConfig.runtime.timeout_ms}
+                              onChange={(e) => updateTaskConfig(taskId, {
+                                runtime: { ...taskConfig.runtime, timeout_ms: parseInt(e.target.value) }
+                              })}
+                              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                              Max Retries
+                            </label>
+                            <input
+                              type="number"
+                              value={taskConfig.runtime.max_retries}
+                              onChange={(e) => updateTaskConfig(taskId, {
+                                runtime: { ...taskConfig.runtime, max_retries: parseInt(e.target.value) }
+                              })}
+                              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                              Cost Limit (USD)
+                            </label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              value={taskConfig.runtime.cost_usd_limit}
+                              onChange={(e) => updateTaskConfig(taskId, {
+                                runtime: { ...taskConfig.runtime, cost_usd_limit: parseFloat(e.target.value) }
+                              })}
+                              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
 
