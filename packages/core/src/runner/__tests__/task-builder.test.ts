@@ -11,9 +11,9 @@ import {
   buildCopyGenerateSpec,
   buildImageBriefSpec,
   getCallConfig,
-} from '../task-builder.js';
-import type { PromptsConfig } from '../../types/config.js';
-import type { KernelPayload } from '../../kernel/compressor.js';
+} from '../task-builder';
+import type { PromptsConfig } from '../../types/config';
+import type { KernelPayload } from '../../kernel/compressor';
 
 // Mock config matching actual prompts.json structure
 const mockConfig: PromptsConfig = {

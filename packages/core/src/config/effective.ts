@@ -1,13 +1,13 @@
-import { loadPromptsConfig, type LoadConfigOptions } from './loader.js';
+import { loadPromptsConfig, type LoadConfigOptions } from './loader';
 import {
   validateConfig,
   type ValidationIssue,
-} from './validator.js';
+} from './validator';
 import {
   resolveEffectiveConfig,
   type EffectiveConfigResult,
   type EffectiveConfigResolveOptions,
-} from './effective-core.js';
+} from './effective-core';
 
 export interface EffectiveConfigOptions
   extends LoadConfigOptions,

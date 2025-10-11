@@ -7,12 +7,12 @@ export {
   type RankCandidate,
   type RankedCandidate,
   type ScoreConfig,
-} from './scorer.js';
+} from './scorer';
 
 export {
   detectSlop,
   applySlopPenalty,
   type SlopCheckOptions,
   type SlopFlag,
-} from './slop.js';
+} from './slop';
 

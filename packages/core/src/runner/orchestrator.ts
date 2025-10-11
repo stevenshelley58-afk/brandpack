@@ -9,10 +9,10 @@
  * - Logs audit trail
  */
 
-import type { LLMSpec } from '../types/spec.js';
-import type { AdapterResponse } from '../types/adapter.js';
-import type { PromptsConfig } from '../types/config.js';
-import { getCallConfig } from './task-builder.js';
+import type { LLMSpec } from '../types/spec';
+import type { AdapterResponse } from '../types/adapter';
+import type { PromptsConfig } from '../types/config';
+import { getCallConfig } from './task-builder';
 
 /**
  * Task execution result

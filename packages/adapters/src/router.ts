@@ -6,7 +6,7 @@ import type {
   LLMSpec,
 } from '@brandpack/core';
 import { AdapterError, AdapterErrorCode } from '@brandpack/core';
-import { llmRegistry, imageRegistry } from './registry.js';
+import { llmRegistry, imageRegistry } from './registry';
 
 function normalizeProvider(
   requested: string | undefined,

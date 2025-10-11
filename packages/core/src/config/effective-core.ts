@@ -1,11 +1,11 @@
 import {
   mergeConfigLayers,
   DEFAULT_FALLBACK_CONFIG,
-} from './merger.js';
+} from './merger';
 import type {
   BrandPackConfig,
   PartialConfig,
-} from './validator.js';
+} from './validator';
 
 export interface EffectiveConfigResolveOptions {
   preset?: string;

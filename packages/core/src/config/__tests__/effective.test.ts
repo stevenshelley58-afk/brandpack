@@ -4,14 +4,14 @@ import assert from 'node:assert/strict';
 import {
   mergeConfigLayers,
   DEFAULT_FALLBACK_CONFIG,
-} from '../merger.js';
+} from '../merger';
 import {
   resolveEffectiveConfig,
-} from '../effective-core.js';
+} from '../effective-core';
 import type {
   BrandPackConfig,
   PartialConfig,
-} from '../validator.js';
+} from '../validator';
 
 test('mergeConfigLayers respects precedence, deep merge, array replace, null ignored', () => {
   const fallback = clone(DEFAULT_FALLBACK_CONFIG);

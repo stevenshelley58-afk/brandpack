@@ -18,8 +18,15 @@
         "name": "next"
       }
     ],
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./*"],
+      "@brandpack/core": ["../../packages/core/src/index.ts"],
+      "@brandpack/core/*": ["../../packages/core/src/*"],
+      "@brandpack/adapters": ["../../packages/adapters/src/index.ts"],
+      "@brandpack/adapters/*": ["../../packages/adapters/src/*"],
+      "@brandpack/ui": ["../../packages/ui/src/index.tsx"],
+      "@brandpack/ui/*": ["../../packages/ui/src/*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],

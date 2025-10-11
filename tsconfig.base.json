@@ -11,6 +11,15 @@
     "declarationMap": true,
     "sourceMap": true,
     "moduleResolution": "node",
+    "baseUrl": ".",
+    "paths": {
+      "@brandpack/core": ["packages/core/src/index.ts"],
+      "@brandpack/core/*": ["packages/core/src/*"],
+      "@brandpack/adapters": ["packages/adapters/src/index.ts"],
+      "@brandpack/adapters/*": ["packages/adapters/src/*"],
+      "@brandpack/ui": ["packages/ui/src/index.tsx"],
+      "@brandpack/ui/*": ["packages/ui/src/*"]
+    },
     "resolveJsonModule": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
