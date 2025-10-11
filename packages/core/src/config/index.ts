@@ -1,23 +1,23 @@
-export { loadPromptsConfig, clearConfigCache } from './loader.js';
+export { loadPromptsConfig, clearConfigCache } from './loader';
 export {
   validateConfig,
   type BrandPackConfig,
   type PartialConfig,
   type ValidationIssue,
   type ValidationResult,
-} from './validator.js';
+} from './validator';
 export {
   mergeConfigLayers,
   DEFAULT_FALLBACK_CONFIG,
   type MergeLayers,
-} from './merger.js';
+} from './merger';
 export {
   resolveEffectiveConfig,
   type EffectiveConfigResolveOptions,
   type EffectiveConfigResult,
-} from './effective-core.js';
+} from './effective-core';
 export {
   getEffectiveConfig,
   ConfigValidationError,
   type EffectiveConfigOptions,
-} from './effective.js';
+} from './effective';

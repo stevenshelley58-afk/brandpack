@@ -11,6 +11,14 @@
     "declarationMap": true,
     "sourceMap": true,
     "moduleResolution": "node",
+    "baseUrl": ".",
+    "paths": {
+      "@brandpack/*": [
+        "packages/*/src",
+        "packages/*/index.ts",
+        "packages/*/index.tsx"
+      ]
+    },
     "resolveJsonModule": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,

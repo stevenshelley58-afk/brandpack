@@ -9,8 +9,8 @@
  * - Evidence citation checks
  */
 
-import type { PromptsConfig } from '../types/config.js';
-import { detectSlop } from '../ranker/slop.js';
+import type { PromptsConfig } from '../types/config';
+import { detectSlop } from '../ranker/slop';
 
 export interface ValidationResult {
   passed: boolean;

@@ -5,9 +5,9 @@
  * that can be executed through any adapter.
  */
 
-import type { LLMSpec } from '../types/spec.js';
-import type { PromptsConfig } from '../types/config.js';
-import type { KernelPayload } from '../kernel/compressor.js';
+import type { LLMSpec } from '../types/spec';
+import type { PromptsConfig } from '../types/config';
+import type { KernelPayload } from '../kernel/compressor';
 
 /**
  * Build a spec for scrape.review_summarize

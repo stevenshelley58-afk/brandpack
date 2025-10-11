@@ -6,7 +6,7 @@
 
 // Export all types
 export * from './types';
-export type { PromptsConfig } from './types/config.js';
+export type { PromptsConfig } from './types/config';
 
 // Config utilities
 export {

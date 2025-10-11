@@ -10,7 +10,7 @@ export {
   buildCopyGenerateSpec,
   buildImageBriefSpec,
   getCallConfig,
-} from './task-builder.js';
+} from './task-builder';
 
 export {
   runTask,
@@ -19,7 +19,7 @@ export {
   type RunTaskOptions,
   type TaskExecutor,
   type TaskValidator,
-} from './orchestrator.js';
+} from './orchestrator';
 
 export {
   validateTaskOutput,
@@ -27,5 +27,5 @@ export {
   validateCopy,
   validateImageBrief,
   type ValidationResult,
-} from './validator.js';
+} from './validator';
 

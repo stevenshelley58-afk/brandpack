@@ -1,6 +1,10 @@
 {
   "name": "brandpack",
   "private": true,
+  "packageManager": "pnpm@10.18.2",
+  "engines": {
+    "node": ">=18.17"
+  },
   "workspaces": ["apps/*", "packages/*"],
   "scripts": {
     "build": "npm run build:packages && npm run build:web",

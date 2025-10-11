@@ -9,5 +9,5 @@ export {
   type KernelPayload,
   type KernelRecord,
   type KernelStore,
-} from './compressor.js';
+} from './compressor';
 
