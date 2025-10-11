@@ -2,7 +2,16 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "./dist",
-    "rootDir": "./src"
+    "rootDir": "./src",
+    "baseUrl": ".",
+    "paths": {
+      "@brandpack/core": ["../core/src/index.ts"],
+      "@brandpack/core/*": ["../core/src/*"],
+      "@brandpack/adapters": ["./src/index.ts"],
+      "@brandpack/adapters/*": ["./src/*"],
+      "@brandpack/ui": ["../ui/src/index.tsx"],
+      "@brandpack/ui/*": ["../ui/src/*"]
+    }
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"],

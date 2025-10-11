@@ -1,6 +1,6 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
-import type { PromptsConfig } from '../types/config.js';
+import type { PromptsConfig } from '../types/config';
 
 export interface LoadConfigOptions {
   /**

@@ -2,7 +2,7 @@ import {
   type BrandPackConfig,
   type PartialConfig,
   type PartialDeep,
-} from './validator.js';
+} from './validator';
 
 export const DEFAULT_FALLBACK_CONFIG: BrandPackConfig = {
   version: 'fallback',

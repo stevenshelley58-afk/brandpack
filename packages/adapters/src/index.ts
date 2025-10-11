@@ -1,9 +1,9 @@
 import type { LLMAdapter } from '@brandpack/core';
-import { llmRegistry, imageRegistry, registerAdapters } from './registry.js';
-import { routeSpec, routeImageGeneration } from './router.js';
-import { NoopLLMAdapter, NoopImageAdapter } from './noop.js';
-import { AnthropicLLMAdapter } from './anthropic.js';
-import { OpenAILLMAdapter } from './openai.js';
+import { llmRegistry, imageRegistry, registerAdapters } from './registry';
+import { routeSpec, routeImageGeneration } from './router';
+import { NoopLLMAdapter, NoopImageAdapter } from './noop';
+import { AnthropicLLMAdapter } from './anthropic';
+import { OpenAILLMAdapter } from './openai';
 
 const builtinLLM: LLMAdapter[] = [new NoopLLMAdapter()];
 

@@ -11,8 +11,8 @@ import {
   validateCopy,
   validateImageBrief,
   validateTaskOutput,
-} from '../validator.js';
-import type { PromptsConfig } from '../../types/config.js';
+} from '../validator';
+import type { PromptsConfig } from '../../types/config';
 
 // Mock config with validation rules
 const mockConfig: PromptsConfig = {
